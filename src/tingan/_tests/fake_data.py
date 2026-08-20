@@ -93,7 +93,7 @@ def fake_concatenated_file(n_files: int, string: str = "PSR") -> Path:
     """
     tmp_path = os.environ.get("RUNNER_TEMP")
     path = Path(f"{temp_path}/data/fake/")
-    path.mkdir(parents=True, exist_ok)
+    path.mkdir(parents=True, exist_ok=True)
     path = Path(path + f"concat_{string}.txt")
     with path.open("w") as f:
         for i in range(n_files):
