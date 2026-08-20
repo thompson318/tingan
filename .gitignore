@@ -3,6 +3,7 @@
 
 data/
 biblio/
+scripts/checkpoints/
 
 ### Python ###
 # Byte-compiled / optimized / DLL files

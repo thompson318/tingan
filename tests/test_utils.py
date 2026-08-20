@@ -1,6 +1,9 @@
+from pathlib import Path
+
 import numpy as np
 
 from tingan import utils
+from tingan._tests.fake_data import fake_concatenated_file
 
 
 def test_bin_min_max_standard() -> None:
@@ -33,3 +36,26 @@ def test_laplace_dist_basic() -> None:
     data = 10 * [1]
     dist = utils.laplace_dist(data)
     assert np.isclose(dist.rvs(), data[0])
+
+
+def test_split_file_at_string_nchunks() -> None:
+    """Test that a file is split into the correct number of chunks."""
+    path = fake_concatenated_file(3, "PSR_chunks")
+    n = utils.split_file_at_string(path, "PSR")
+    assert n == 3
+
+
+def test_split_file_at_string_chunk_exists() -> None:
+    """Test that chunked files are created."""
+    path = fake_concatenated_file(2, "PSR_exists")
+    utils.split_file_at_string(path, "PSR")
+    sfx = path.suffix
+    for i in range(2):
+        assert Path(str(path)[: -len(sfx)] + f"_{i}" + sfx).exists()
+
+
+def test_split_file_at_string_string_middle() -> None:
+    """Test a file is split only when the string appears at the beginning of a line."""
+    path = fake_concatenated_file(1, "random")
+    n = utils.split_file_at_string(path, "random")
+    assert n == 1

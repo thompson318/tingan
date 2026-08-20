@@ -1,5 +1,7 @@
 """Some useful functions for data manipulation and analysis."""
 
+from pathlib import Path
+
 import numpy as np
 from scipy.stats import _continuous_distns, laplace, norm
 
@@ -79,3 +81,36 @@ def laplace_dist(data: list | np.ndarray) -> _continuous_distns:
     :param data: data to mimic.
     """
     return laplace(loc=np.mean(data), scale=np.std(data))
+
+
+def split_file_at_string(file: Path, string: str) -> int:
+    """
+    Split a file at given string.
+
+    Useful to reverse concatenation of several files that start with the same string.
+
+    :param file: path to file
+    :param string: string indicating the beginning of a chunk
+    :return: number of chunk founds
+    """
+    lines_to_write: list[str] = []
+    n_files = 0
+    [*_, prefix, suffix] = str(file).split(".")
+    with Path(file).open(mode="r") as rfile:
+        while True:
+            read_line = rfile.readline()
+            if not read_line or string == read_line[: len(string)]:
+                if len(lines_to_write) > 0:
+                    with (
+                        Path(f"{prefix}_{n_files}")
+                        .with_suffix(f".{suffix}")
+                        .open(mode="w") as wfile
+                    ):
+                        for line in lines_to_write:
+                            wfile.write(line)
+                    lines_to_write = []
+                    n_files += 1
+                if not read_line:
+                    break
+            lines_to_write.append(read_line)
+    return n_files

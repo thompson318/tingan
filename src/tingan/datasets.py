@@ -4,7 +4,13 @@ import json
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 import torch
+from astropy import units as u
+from pint.models import get_model_and_toas
+from pint.residuals import Residuals
+
+from tingan.utils import split_file_at_string
 
 
 class TimingNoise(torch.utils.data.Dataset):
@@ -234,3 +240,65 @@ def load_json(path: str) -> dict:
     """Load JSON file."""
     with Path(path).open() as file:
         return json.load(file)
+
+
+def split_par_file(parfile: Path) -> int:
+    """
+    Split concatenated par files into chunks.
+
+    :param parfile: path to concatenated par file
+    :return: number of chunks found
+    """
+    return split_file_at_string(parfile, "PSRJ")
+
+
+def split_tim_file(timfile: Path) -> int:
+    """
+    Split concatenated tim files into chunks.
+
+    :param timfile: path to concatenated timfile
+    :return: number of chunks found
+    """
+    return split_file_at_string(timfile, "FORMAT 1")
+
+
+def split_tim_and_par_files(timfile: Path, parfile: Path) -> int:
+    """
+    Split concatenated tim and par files into chunks.
+
+    The tim file should correspond to the par file.
+
+    :param timfile: path to concatenated timfile
+    :param parfile: path to concatenated parfile
+    :return: number of chunks found
+    """
+    n_tim_files = split_tim_file(timfile)
+    n_par_files = split_par_file(parfile)
+    if n_tim_files != n_par_files:
+        diff_nfiles_err_msg = (
+            f"The time file was split into {n_tim_files} chunks "
+            f"but the par file was split into {n_par_files} chunks."
+        )
+        raise ValueError(diff_nfiles_err_msg)
+    return n_tim_files
+
+
+def partim_to_timellm_format(parfile: Path, timefile: Path) -> pd.DataFrame:
+    """
+    Create residuals in timellm format from pulsar tim and par file.
+
+    :param parfile: path to pulsar parfile
+    :param timefile: path to pulsar timfile
+    :return: residuals in timellm format (date, resid_s, err_s)
+    """
+    model, toas = get_model_and_toas(parfile, timefile)
+    residuals_seconds = Residuals(toas, model).time_resids.to(u.s)
+    errors_resconds = toas.get_errors().to(u.s)
+    mjds = toas.get_mjds(high_precision=True)
+    for i in range(len(mjds)):
+        mjds[i] = mjds[i].isot
+    df = pd.DataFrame(np.array([mjds, residuals_seconds, errors_resconds]).T)
+    df.to_csv(
+        parfile.with_suffix(".csv"), header=["date", "resid_s", "err_s"], index=False
+    )
+    return df

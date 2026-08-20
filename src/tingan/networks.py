@@ -112,3 +112,13 @@ class TimeSeriesDiscriminator(torch.nn.Module):
         x = x.permute(0, 2, 1)  # (batch, n_channels, seq_len) for Conv1d
         features = self.net(x)
         return self.head(features)
+
+
+def trainable_parameters(model: torch.nn.Module) -> list:
+    """
+    Identify the trainable parameters of a neural network.
+
+    :param model: PyTorch neural network
+    :return: list of trainable parameters
+    """
+    return [p for p in model.parameters() if p.requires_grad]

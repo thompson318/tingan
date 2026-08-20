@@ -8,7 +8,7 @@ classifiers = [
   "Programming Language :: Python :: 3.13",
   "Typing :: Typed",
 ]
-dependencies = ["torch", "numpy", "matplotlib", "pyyaml", "scipy"]
+dependencies = ["torch", "numpy", "matplotlib", "pyyaml", "scipy", "pint-pulsar", "timellm @ git+https://github.com/NSs-FLF-RHUL/Time-LLM"]
 description = "A realistic pulsar timing noise simulator." # description of what the package provides / does
 dynamic = ["version"]
 keywords = []
