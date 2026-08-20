@@ -91,7 +91,7 @@ def fake_concatenated_file(n_files: int, string: str = "PSR") -> Path:
     :param n_files: Number of files to concatenate.
     :param string: The string that indicates the begining of a file.
     """
-    tmp_path = os.environ.get("RUNNER_TEMP")
+    temp_path = os.environ.get("RUNNER_TEMP")
     path = Path(f"{temp_path}/data/fake/")
     path.mkdir(parents=True, exist_ok=True)
     path = Path(path + f"concat_{string}.txt")
